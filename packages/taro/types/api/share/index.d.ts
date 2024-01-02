@@ -3,20 +3,38 @@ import Taro from '../../index'
 declare module '../../index' {
   namespace updateShareMenu {
     interface Option {
-      /** 动态消息的 activityId。通过 [updatableMessage.createActivityId](https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/updatable-message/updatableMessage.createActivityId.html) 接口获取 */
-      activityId?: string
-      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
-      complete?: (res: TaroGeneral.CallbackResult) => void
-      /** 接口调用失败的回调函数 */
-      fail?: (res: TaroGeneral.CallbackResult) => void
-      /** 是否是动态消息，详见[动态消息](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share/updatable-message.html) */
+      /** 是否使用带 shareTicket 的转发[详情](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share.html)
+       * @supported weapp, qq
+       * @default false
+       */
+      withShareTicket?: boolean
+      /** 是否是动态消息，详见[动态消息](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share/updatable-message.html)
+       * @supported weapp
+       * @default false
+       */
       isUpdatableMessage?: boolean
+      /**
+       * 动态消息的 activityId。通过 [updatableMessage.createActivityId](https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/updatable-message/updatableMessage.createActivityId.html) 接口获取
+       * @supported weapp
+       */
+      activityId?: string
+      /**
+       * 群待办消息的id，通过toDoActivityId可以把多个群待办消息聚合为同一个。通过 updatableMessage.createActivityId 接口获取。详见[群待办消息](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share.html)
+       * @supported weapp
+       */
+      toDoActivityId?: string
+      /** 动态消息的模板信息
+       * @supported weapp
+       */
+      templateInfo?: UpdatableMessageFrontEndTemplateInfo
+      /** 是否是私密消息。详见 [小程序私密消息](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share/private-message.html) */
+      isPrivateMessage?: boolean
       /** 接口调用成功的回调函数 */
       success?: (res: TaroGeneral.CallbackResult) => void
-      /** 动态消息的模板信息 */
-      templateInfo?: UpdatableMessageFrontEndTemplateInfo
-      /** 是否使用带 shareTicket 的转发[详情](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share.html) */
-      withShareTicket?: boolean
+      /** 接口调用失败的回调函数 */
+      fail?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
+      complete?: (res: TaroGeneral.CallbackResult) => void
     }
 
     /** 动态消息的模板信息 */
@@ -41,14 +59,20 @@ declare module '../../index' {
       fail?: (res: TaroGeneral.CallbackResult) => void
       /** 接口调用成功的回调函数 */
       success?: (res: TaroGeneral.CallbackResult) => void
-      /** 是否使用带 shareTicket 的转发[详情](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share.html) */
+      /** 是否使用带 shareTicket 的转发[详情](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/share.html) 
+       * @suported weapp, qq
+       * @default false
+       */
       withShareTicket?: boolean
       /** QQ小程序分享功能，支持分享到QQ、QQ空间、微信好友、微信朋友圈
-       * @supported weapp, qq
+       * @supported qq
        * @qq QQ支持的值： ['qq', 'qzone', 'wechatFriends', 'wechatMoment']
-       * @weapp 微信支持：['wechatFriends', 'wechatMoment'] / ['shareAppMessage', 'shareTimeline']
        */
       showShareItems?: string[]
+      /** 本接口为 Beta 版本，暂只在 Android 平台支持。需要显示的转发按钮名称列表，默认['shareAppMessage']。按钮名称合法值包含 "shareAppMessage"、"shareTimeline" 两种
+       * @supported weapp
+       */
+      menus?: string[]
     }
   }
 
@@ -56,6 +80,12 @@ declare module '../../index' {
     interface Option {
       /** 要分享的图片地址，必须为本地路径或临时路径 */
       path: string
+      /** 分享样式，可选 v2 */
+      style?: string
+      /** 分享的图片消息是否要带小程序入口 */
+      needShowEntrance?: string
+      /** 从消息小程序入口打开小程序的路径，如果当前页面允许分享给朋友，则默认为当前页面路径，否则默认为小程序首页 */
+      entrancePath?: string
       /** 接口调用成功的回调函数 */
       success?: (res: TaroGeneral.CallbackResult) => void
       /** 接口调用失败的回调函数 */
@@ -167,9 +197,31 @@ declare module '../../index' {
     }
   }
 
+  namespace shareInvite {
+    interface Option {
+      /** 接口调用成功的回调函数 */
+      success?: (result:  TaroGeneral.CallbackResult) => void
+      /** 接口调用失败的回调函数 */
+      fail?: (res: FailCallbackResult) => void
+      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
+      complete?: (res: TaroGeneral.CallbackResult) => void
+    }
+    interface  FailCallbackResult extends TaroGeneral.CallbackResult {
+      errCode: keyof ShareInviteErrCode
+    }
+    interface ShareInviteErrCode {
+      /** 客户端错误 */
+      0
+      /** 用户取消 */
+      1
+      /** 后端错误 */
+      2
+    }
+  }
+
   interface TaroStatic {
     /** 更新转发属性
-     * @supported weapp
+     * @supported weapp, qq
      * @example
      * ```tsx
      * Taro.updateShareMenu({
@@ -182,7 +234,7 @@ declare module '../../index' {
     updateShareMenu (option: updateShareMenu.Option): Promise<TaroGeneral.CallbackResult>
 
     /** 显示当前页面的转发按钮
-     * @supported weapp, qq, tt
+     * @supported weapp, alipay, jd, qq, tt
      * @example
      * ```tsx
      * Taro.showShareMenu({
@@ -255,6 +307,16 @@ declare module '../../index' {
      *
      * > 本接口为 Beta 版本，暂只在 Android 平台支持。
      * @supported weapp
+     * @example
+     * ```tsx
+     * // 绑定分享参数
+     * wx.onCopyUrl(() => {
+     *   return { query: 'a=1&b=2' }
+     * })
+     *
+     * // 取消绑定分享参数
+     * wx.offCopyUrl()
+     * ```
      * @see https://developers.weixin.qq.com/miniprogram/dev/api/share/wx.onCopyUrl.html
      */
     onCopyUrl (
@@ -266,6 +328,16 @@ declare module '../../index' {
      *
      * > 本接口为 Beta 版本，暂只在 Android 平台支持。
      * @supported weapp
+     * @example
+     * ```tsx
+     * // 绑定分享参数
+     * wx.onCopyUrl(() => {
+     *   return { query: 'a=1&b=2' }
+     * })
+     * 
+     * // 取消绑定分享参数
+     * wx.offCopyUrl()
+     * ```
      * @see https://developers.weixin.qq.com/miniprogram/dev/api/share/wx.offCopyUrl.html
      */
     offCopyUrl (
@@ -274,7 +346,7 @@ declare module '../../index' {
     ): void
 
     /** 隐藏当前页面的转发按钮
-     * @supported weapp, tt
+     * @supported weapp, jd, qq, tt
      * @example
      * ```tsx
      * Taro.hideShareMenu()
@@ -287,7 +359,7 @@ declare module '../../index' {
      *
      * **Tips**
      * - 如需要展示群名称，可以使用[开放数据组件](/docs/components/open/open-data)
-     * @supported weapp
+     * @supported weapp, qq
      * @example
      * 敏感数据有两种获取方式，一是使用 [加密数据解密算法](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html#%E5%8A%A0%E5%AF%86%E6%95%B0%E6%8D%AE%E8%A7%A3%E5%AF%86%E7%AE%97%E6%B3%95) 。
      * 获取得到的开放数据为以下 json 结构（其中 openGId 为当前群的唯一标识）：
@@ -324,5 +396,11 @@ declare module '../../index' {
      * @see https://developers.weixin.qq.com/miniprogram/dev/api/share/wx.authPrivateMessage.html
      */
     authPrivateMessage (option: authPrivateMessage.Option): Promise<authPrivateMessage.SuccessCallbackResult>
+
+    /** 发送实时组队消息接口 TIPS：调用此接口前，请务必确保您已接入实时组队消息能力，否则调用无效
+     * @supported qq
+     * @see https://q.qq.com/wiki/develop/game/API/share/qq.shareInvite.html
+     */
+    shareInvite(option: shareInvite.Option): void
   }
 }
