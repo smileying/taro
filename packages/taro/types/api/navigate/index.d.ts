@@ -1,10 +1,22 @@
 import Taro from '../../index'
 
 declare module '../../index' {
+  namespace restartMiniProgram {
+    interface Option {
+      /** 打开的页面路径，path 中 ? 后面的部分会成为 query */
+      path: string
+      /** 接口调用成功的回调函数 */
+      success?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用失败的回调函数 */
+      fail?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
+      complete?: (res: TaroGeneral.CallbackResult) => void
+    }
+  }
   namespace openEmbeddedMiniProgram {
     interface Option {
       /** 要打开的小程序 appId */
-      appId?: string
+      appId: string
       /** 打开的页面路径，如果为空则打开首页。path 中 ? 后面的部分会成为 query，在小程序的 `App.onLaunch`、`App.onShow` 和 `Page.onLoad` 的回调函数或小游戏的 [Taro.onShow](#) 回调函数、[Taro.getLaunchOptionsSync](/docs/apis/base/weapp/life-cycle/getLaunchOptionsSync) 中可以获取到 query 数据。对于小游戏，可以只传入 query 部分，来实现传参效果，如：传入 "?foo=bar"。 */
       path?: string
       /** 需要传递给目标小程序的数据，目标小程序可在 `App.onLaunch`，`App.onShow` 中获取到这份数据。如果跳转的是小游戏，可以在 [Taro.onShow](#)、[Taro.getLaunchOptionsSync](/docs/apis/base/weapp/life-cycle/getLaunchOptionsSync) 中可以获取到这份数据数据。 */
@@ -44,18 +56,35 @@ declare module '../../index' {
     }
   }
 
+  namespace onEmbeddedMiniProgramHeightChange {
+    type Callback = (res: Result) => void
+    type Result = {
+      /** 可视高度 */
+      height: number
+      /** 半屏小程序初始高度 */
+      initialHeight: number
+    }
+  }
+
   namespace navigateToMiniProgram {
     interface Option {
       /** 要打开的小程序 appId */
       appId?: string
       /** 打开的页面路径，如果为空则打开首页。path 中 ? 后面的部分会成为 query，在小程序的 `App.onLaunch`、`App.onShow` 和 `Page.onLoad` 的回调函数或小游戏的 [Taro.onShow](#) 回调函数、[Taro.getLaunchOptionsSync](/docs/apis/base/weapp/life-cycle/getLaunchOptionsSync) 中可以获取到 query 数据。对于小游戏，可以只传入 query 部分，来实现传参效果，如：传入 "?foo=bar"。 */
       path?: string
+      /** 传给目标小程序启动参数的 query 字段，目标小程序可在 App.onLaunch(options) 或 App.onShow(options) 中通过 options.query 获取，也可通过 my.getLaunchOptionsSync().query 获取。
+       * @supported alipay
+       * @alipay 兼容性 基础库: 2.7.19+
+       */
+      query?: TaroGeneral.IAnyObject
       /** 需要传递给目标小程序的数据，目标小程序可在 `App.onLaunch`，`App.onShow` 中获取到这份数据。如果跳转的是小游戏，可以在 [Taro.onShow](#)、[Taro.getLaunchOptionsSync](/docs/apis/base/weapp/life-cycle/getLaunchOptionsSync) 中可以获取到这份数据数据。 */
       extraData?: TaroGeneral.IAnyObject
       /** 要打开的小程序版本。仅在当前小程序为开发版或体验版时此参数有效。如果当前小程序是正式版，则打开的小程序必定是正式版。 */
       envVersion?: keyof EnvVersion
       /** 小程序链接，当传递该参数后，可以不传 appId 和 path。链接可以通过【小程序菜单】->【复制链接】获取。 */
       shortLink?: string
+      /** 不reLaunch目标小程序，直接打开目标跳转的小程序退后台时的页面，需满足以下条件：1. 目标跳转的小程序生命周期未被销毁；2. 且目标当次启动的path、query与上次启动相同，apiCategory以wx.getApiCategory接口的返回结果为准。 */
+      noRelaunchIfPathUnchanged?: boolean
       /** 接口调用成功的回调函数 */
       success?: (res: TaroGeneral.CallbackResult) => void
       /** 接口调用失败的回调函数 */
@@ -89,6 +118,10 @@ declare module '../../index' {
 
   namespace exitMiniProgram {
     interface Option {
+      /** 需要返回给上一个小程序的数据，上一个小程序可在 App.onShow 中获取到这份数据。 
+       * [详情](https://developers.weixin.qq.com/miniprogram/dev/reference/api/App.html)。
+       */
+      extraData?: TaroGeneral.IAnyObject
       /** 接口调用成功的回调函数 */
       success?: (res: TaroGeneral.CallbackResult) => void
       /** 接口调用失败的回调函数 */
@@ -221,12 +254,98 @@ declare module '../../index' {
     }
   }
 
+  namespace navigateToSmartProgram {
+    interface Option {
+      /** 要打开的小程序 App Key（使用线上版 appkey 和 envVersion 配合使用） */
+      appKey: string
+      /** 打开的页面路径，如果为空则打开首页。path 中 ? 后面的部分会成为 query，在小程序的 App.onLaunch、App.onShow、Page.onLoad 和 Page.onInit 的回调函数中可以获取到 query 数据。query 的参数中不能包含（_naExtParams，_baiduboxapp，callback，upgrade）这几个字段，因为他们都是端上的保留字，使用后参数会出现接受不到的情况 */
+      path?: string
+      /** 跳转后在 App.onLaunch、App.onShow、Page.onLoad 和 Page.onInit 的回调函数中获取到的 query 数据，是否进行一次 decodeURIComponent 解码
+       * @default false
+       */
+      queryDecode?: boolean
+      /** 需要传递给目标小程序的数据，目标小程序可在 App.onLaunch()，App.onShow() 中获取到这份数据 */
+      extraData?: TaroGeneral.IAnyObject
+      /** 要打开的小程序版本。仅在当前小程序为开发版或体验版时此参数有效。如果当前小程序是正式版，则打开的小程序必定是正式版。开发者跳转 develop 版本，建议在 appkey 字段中携带具体版本号，格式为 ${app_key}_${dev_version}，envVersion 为默认值
+       * @default release
+       */
+      envVersion?: keyof EnvVersion
+      /** 接口调用成功的回调函数 */
+      success?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用失败的回调函数 */
+      fail?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
+      complete?: (res: TaroGeneral.CallbackResult) => void
+    }
+    interface EnvVersion {
+      /** 正式版 */
+      release
+      /** 开发版 */
+      develop
+      /** 体验版 */
+      trial
+    }
+  }
+
+  namespace navigateBackSmartProgram {
+    interface Option {
+      extraData?: TaroGeneral.IAnyObject
+      /** 接口调用成功的回调函数 */
+      success?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用失败的回调函数 */
+      fail?: (res: TaroGeneral.CallbackResult) => void
+      /** 接口调用结束的回调函数（调用成功、失败都会执行） */
+      complete?: (res: TaroGeneral.CallbackResult) => void
+    }
+  }
+
   interface TaroStatic {
+    /** 重启当前小程序
+     * @supported weapp
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api/navigate/wx.restartMiniProgram.html
+     */
+    restartMiniProgram(option: restartMiniProgram.Option): void
+
     /** 打开半屏小程序。接入指引请参考 [半屏小程序能力](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/openEmbeddedMiniProgram.html)。
      * @supported weapp
      * @see https://developers.weixin.qq.com/miniprogram/dev/api/navigate/wx.openEmbeddedMiniProgram.html
      */
     openEmbeddedMiniProgram(option?: openEmbeddedMiniProgram.Option): Promise<TaroGeneral.CallbackResult>
+
+    /** 监听半屏小程序可视高度变化事件
+     * @supported weapp
+     * @example
+     * ```tsx
+     * const func = function (res) {
+     *   console.log(res.height)
+     *   console.log(res.initialHeight)
+     * }
+     * wx.onEmbeddedMiniProgramHeightChange(func)
+     * // 取消监听
+     * wx.offEmbeddedMiniProgramHeightChange(func)
+     * ```
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api/navigate/wx.onEmbeddedMiniProgramHeightChange.html
+     */
+    onEmbeddedMiniProgramHeightChange(
+      /** 半屏小程序可视高度变化事件的监听函数 */
+      callback: onEmbeddedMiniProgramHeightChange.Callback
+    ): void
+
+    /** 移除半屏小程序可视高度变化事件的监听函数
+     * @supported weapp
+     * @example
+     * ```tsx
+     * const listener = function (res) { console.log(res) }
+     *
+     * wx.onEmbeddedMiniProgramHeightChange(listener)
+     * wx.offEmbeddedMiniProgramHeightChange(listener) // 需传入与监听时同一个的函数对象
+     * ```
+     * @see https://developers.weixin.qq.com/miniprogram/dev/api/navigate/wx.offEmbeddedMiniProgramHeightChange.html
+     */
+    offEmbeddedMiniProgramHeightChange(
+      /** 传入的监听函数。不传此参数则移除所有监听函数。 */
+      callback?: onEmbeddedMiniProgramHeightChange.Callback
+    )
 
     /** 打开另一个小程序
      *
@@ -241,7 +360,7 @@ declare module '../../index' {
      * **关于调试**
      * - 在开发者工具上调用此 API 并不会真实的跳转到另外的小程序，但是开发者工具会校验本次调用跳转是否成功。[详情](https://developers.weixin.qq.com/miniprogram/dev/devtools/different.html#跳转小程序调试支持)
      * - 开发者工具上支持被跳转的小程序处理接收参数的调试。[详情](https://developers.weixin.qq.com/miniprogram/dev/devtools/different.html#跳转小程序调试支持)
-     * @supported weapp, tt
+     * @supported weapp, alipay, jd, qq, tt
      * @example
      * ```tsx
      * Taro.navigateToMiniProgram({
@@ -263,7 +382,7 @@ declare module '../../index' {
     /** 返回到上一个小程序。只有在当前小程序是被其他小程序打开时可以调用成功
      *
      * 注意：**微信客户端 iOS 6.5.9，Android 6.5.10 及以上版本支持**
-     * @supported weapp, tt
+     * @supported weapp, weapp, alipay, jd, qq, tt
      * @example
      * ```tsx
      * Taro.navigateBackMiniProgram({
@@ -280,7 +399,7 @@ declare module '../../index' {
     navigateBackMiniProgram(option: navigateBackMiniProgram.Option): Promise<TaroGeneral.CallbackResult>
 
     /** 退出当前小程序。必须有点击行为才能调用成功。
-     * @supported weapp
+     * @supported weapp, alipay, qq, tt
      * @example
      * ```tsx
      * Taro.exitMiniProgram()
@@ -323,5 +442,16 @@ declare module '../../index' {
      * @see https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter6_1_25.shtml
      */
     openBusinessView(option: openBusinessView.Option): Promise<TaroGeneral.CallbackResult>
+    /** 打开另一个小程序
+     * @supported swan
+     * @see https://smartprogram.baidu.com/docs/develop/api/open/swan-navigateToSmartProgram/
+     */
+    navigateToSmartProgram(option: navigateToSmartProgram.Option): void
+
+    /** 返回到上一个小程序。注意只有在当前小程序是被其他小程序打开时可以调用成功。
+     * @supported swan
+     * @see https://smartprogram.baidu.com/docs/develop/api/open/swan-navigateBackSmartProgram/
+     */
+    navigateBackSmartProgram(option: navigateBackSmartProgram.Option): void
   }
 }

@@ -152,7 +152,7 @@ declare module '../../index' {
       /** 需要显示在页面中的金额，单位为分 */
       fee: number
       /** 任意数据，传递给功能页中的响应函数 */
-      paymentArgs: Object
+      paymentArgs: TaroGeneral.IAnyObject
       /** 需要显示在页面中的货币符号的代码
        * @default CNY
        */
@@ -334,7 +334,7 @@ declare module '../../index' {
       /** 统一下单接口返回的 prepay_id 参数值，提交格式如：prepay_id=*** */
       package: string
       /** 订单信息，仅在需要校验的场景下需要传递，具体见[接口说明](https://developers.weixin.qq.com/miniprogram/dev/framework/ministore/minishopopencomponent2/API/order/requestOrderPayment) */
-      orderInfo?: Object
+      orderInfo?: TaroGeneral.IAnyObject
       /** 外部 APP 用户 ID */
       extUserUin?: string
       /** 签名算法 */
